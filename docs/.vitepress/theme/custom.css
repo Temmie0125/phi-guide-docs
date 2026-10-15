@@ -1,0 +1,9 @@
+/* 控分计算器内嵌 iframe 在深色模式下的边框可见性 */
+.vp-doc iframe {
+  color-scheme: light;
+}
+
+/* 页脚文字在窄屏下的换行间距 */
+.VPFooter .message {
+  margin: 0 auto;
+}

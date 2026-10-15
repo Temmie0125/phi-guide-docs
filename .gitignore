@@ -1,0 +1,11 @@
+node_modules/
+docs/.vitepress/dist/
+docs/.vitepress/cache/
+.DS_Store
+*.local
+
+# 迁移用临时产物（原始文档抓取与中间映射）
+kdocs_raw*.json
+kdocs_content.md
+calc_url.txt
+image-map.json

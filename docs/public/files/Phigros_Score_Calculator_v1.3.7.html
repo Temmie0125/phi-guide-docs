@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phigros控分计算器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <style>
+        .custom-font {
+            font-family: "Saira Hybrid", "Arial", sans-serif;
+        }
+    </style>
+    <!-- Tailwind配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#007ACC',
+                        secondary: '#1E1E1E',
+                        tertiary: '#2D2D30',
+                        dark: '#3C3C3C',
+                        light: '#CCCCCC',
+                        accent: '#007ACC',
+                    },
+                    fontFamily: {
+                        sans: ['Saira Hybrid', 'system-ui', 'SimHei', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+            }
+            .scrollbar-hide {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+            .table-row-odd {
+                background-color: #2D2D30;
+            }
+            .table-row-even {
+                background-color: #3C3C3C;
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .progress-container {
+                height: 8px;
+                background-color: #3C3C3C;
+                border-radius: 4px;
+                overflow: hidden;
+            }
+            .progress-bar {
+                height: 100%;
+                background-color: #007ACC;
+                transition: width 0.3s ease;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-secondary text-white min-h-screen flex flex-col">
+    <!-- 顶部导航 -->
+    <header class="bg-tertiary py-4 px-6 shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-white flex items-center">
+                <i class="fa fa-music mr-2 text-accent"></i>
+                Phigros控分计算器
+            </h1>
+            <!-- 修改版本号为可点击元素 -->
+            <div id="version" class="text-sm text-light cursor-pointer">v1.3.7</div>
+        </div>
+    </header>
+
+    <!-- 主内容区 -->
+    <main class="flex-grow container mx-auto px-4 py-8">
+        <div class="bg-tertiary rounded-lg shadow-xl p-6 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- 左侧输入区域 -->
+                <div class="bg-dark rounded-lg p-6 shadow-inner">
+                    <h2 class="text-xl font-semibold mb-4 text-accent flex items-center">
+                        <i class="fa fa-calculator mr-2"></i>
+                        输入参数
+                    </h2>
+
+                    <div class="space-y-4">
+                        <div class="form-group">
+                            <label for="totalNotes" class="block text-light mb-2">谱面物量:</label>
+                            <input type="number" id="totalNotes"
+                                class="w-full px-4 py-2 bg-secondary border border-dark rounded-md focus:outline-none focus:ring-2 focus:ring-accent text-white"
+                                placeholder="请输入谱面总物量" min="1" max="25000">
+                            <p class="text-xs text-gray-400 mt-1">建议物量范围：1-2500</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="targetScore" class="block text-light mb-2">目标分数:</label>
+                            <input type="number" id="targetScore"
+                                class="w-full px-4 py-2 bg-secondary border border-dark rounded-md focus:outline-none focus:ring-2 focus:ring-accent text-white"
+                                placeholder="请输入目标分数" min="0" max="1000000">
+                            <p class="text-xs text-gray-400 mt-1">分数范围：0-1000000</p>
+                        </div>
+
+                        <div class="form-group flex items-center">
+                            <input type="checkbox" id="projectMode"
+                                class="mr-2 h-4 w-4 text-accent focus:ring-accent border-dark rounded">
+                            <label for="projectMode" class="text-light">课题模式</label>
+                        </div>
+
+                        <div class="form-group flex items-center">
+                            <input type="checkbox" id="fastMode"
+                                class="mr-2 h-4 w-4 text-accent focus:ring-accent border-dark rounded" checked>
+                            <label for="fastMode" class="text-light">快速模式</label>
+                        </div>
+
+                        <button id="calculateBtn"
+                            class="w-full bg-accent hover:bg-opacity-90 text-white font-medium py-3 px-4 rounded-md transition duration-200 ease-in-out shadow-md hover:shadow-lg transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent">
+                            <i class="fa fa-calculator mr-2"></i>
+                            计算
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 右侧说明区域 -->
+                <div class="bg-dark rounded-lg p-6 shadow-inner">
+                    <h2 class="text-xl font-semibold mb-4 text-accent flex items-center">
+                        <i class="fa fa-info-circle mr-2"></i>
+                        计算规则说明
+                    </h2>
+
+                    <div id="ruleDescription" class="text-light leading-relaxed space-y-4">
+                        <p class="font-medium">普通模式计算规则:</p>
+                        <p>判定分 = (Perfect + Good*0.65)/物量 * 900000</p>
+                        <p>连击分 = (Max Combo/物量)*100000</p>
+                        <p>总分 = (判定分 + 连击分) 取整 (最高1000000)</p>
+                        <p class="text-sm italic">所有计算结果均采用四舍六入五成双规则取整</p>
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+
+        <!-- 结果区域 -->
+        <div class="bg-tertiary rounded-lg shadow-xl p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4 text-accent flex items-center">
+                <i class="fa fa-table mr-2"></i>
+                计算结果
+            </h2>
+
+            <div id="statsInfo" class="bg-dark rounded-lg p-4 mb-4 text-light">
+                请输入参数并点击计算按钮
+            </div>
+
+            <div id="progressContainer" class="progress-container mb-4 hidden">
+                <div id="progressBar" class="progress-bar" style="width: 0%"></div>
+            </div>
+
+            <div id="warningInfo" class="hidden bg-yellow-900 rounded-lg p-4 mb-4 text-light">
+                <i class="fa fa-exclamation-triangle mr-2"></i>
+                <span id="warningText"></span>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table id="resultsTable" class="w-full border-collapse">
+                    <thead>
+                        <tr class="bg-secondary text-accent">
+                            <th class="py-3 px-4 text-left cursor-pointer hover:bg-dark transition duration-150"
+                                data-sort="perfect">
+                                Perfect <i class="fa fa-sort ml-1"></i>
+                            </th>
+                            <th class="py-3 px-4 text-left cursor-pointer hover:bg-dark transition duration-150"
+                                data-sort="good">
+                                Good <i class="fa fa-sort ml-1"></i>
+                            </th>
+                            <th class="py-3 px-4 text-left cursor-pointer hover:bg-dark transition duration-150"
+                                data-sort="badMiss">
+                                Bad/Miss <i class="fa fa-sort ml-1"></i>
+                            </th>
+                            <th class="py-3 px-4 text-left cursor-pointer hover:bg-dark transition duration-150"
+                                data-sort="maxCombo">
+                                最大连击 <i class="fa fa-sort ml-1"></i>
+                            </th>
+                            <th class="py-3 px-4 text-left cursor-pointer hover:bg-dark transition duration-150"
+                                data-sort="accuracy">
+                                准确率 <i class="fa fa-sort ml-1"></i>
+                            </th>
+                            <th class="py-3 px-4 text-left cursor-pointer hover:bg-dark transition duration-150"
+                                data-sort="totalScore">
+                                总分 <i class="fa fa-sort ml-1"></i>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsBody">
+                        <!-- 结果将在这里动态生成 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-tertiary py-4 px-6 text-center text-light text-sm">
+        <div class="container mx-auto">
+            <p>© 2025 Phigros控分计算器 by Temmie | 所有计算结果仅供参考</p>
+        </div>
+    </footer>
+
+    <!-- 新增更新日志窗口 -->
+    <div id="changelogModal"
+        class="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 hidden justify-center items-center">
+        <div class="bg-tertiary p-6 rounded-lg w-96">
+            <h2 class="text-xl font-semibold mb-4 text-accent flex items-center">
+                <i class="fa fa-info-circle mr-2"></i>
+                更新日志 v1.3.6
+            </h2>
+            <ul class="text-light leading-relaxed space-y-2">
+                <li>优化了输入检测条件，现在将无法输入小数</li>
+            </ul>
+            <button id="closeChangelog"
+                class="mt-4 bg-accent hover:bg-opacity-90 text-white font-medium py-2 px-4 rounded-md transition duration-200 ease-in-out shadow-md hover:shadow-lg transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent">
+                关闭
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 课题模式开关
+        const projectModeCheckbox = document.getElementById('projectMode');
+        const fastModeCheckbox = document.getElementById('fastMode');
+        const ruleDescription = document.getElementById('ruleDescription');
+        const calculateBtn = document.getElementById('calculateBtn');
+        const resultsBody = document.getElementById('resultsBody');
+        const statsInfo = document.getElementById('statsInfo');
+        const warningInfo = document.getElementById('warningInfo');
+        const warningText = document.getElementById('warningText');
+        const totalNotesInput = document.getElementById('totalNotes');
+        const targetScoreInput = document.getElementById('targetScore');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
+        // 新增版本号元素
+        const version = document.getElementById('version');
+        // 新增更新日志窗口元素
+        const changelogModal = document.getElementById('changelogModal');
+        // 新增关闭更新日志按钮元素
+        const closeChangelog = document.getElementById('closeChangelog');
+
+        // 排序相关变量
+        let currentSortColumn = null;
+        let sortAscending = true;
+        let worker = null;
+        let timeoutId = null;
+
+        // 更新规则说明
+        projectModeCheckbox.addEventListener('change', updateRuleDescription);
+
+        function updateRuleDescription() {
+            if (projectModeCheckbox.checked) {
+                ruleDescription.innerHTML = `
+                    <p class="font-medium">课题模式计算规则:</p>
+                    <p>判定分 = (Perfect + Good*0.65)/物量 * 1000000</p>
+                    <p>总分 = 判定分 (最高1000000)</p>
+                    <p class="text-sm italic">所有计算结果均采用四舍六入五成双规则取整</p>
+                `;
+            } else {
+                ruleDescription.innerHTML = `
+                    <p class="font-medium">普通模式计算规则:</p>
+                    <p>判定分 = (Perfect + Good*0.65)/物量 * 900000</p>
+                    <p>连击分 = (Max Combo/物量)*100000</p>
+                    <p>总分 = (判定分 + 连击分) 取整 (最高1000000)</p>
+                    <p class="text-sm italic">所有计算结果均采用四舍六入五成双规则取整</p>
+                `;
+            }
+        }
+
+        // 表格排序功能
+        document.querySelectorAll('th[data-sort]').forEach(th => {
+            th.addEventListener('click', () => {
+                const sortColumn = th.getAttribute('data-sort');
+
+                // 如果点击同一列，则切换排序方向
+                if (sortColumn === currentSortColumn) {
+                    sortAscending = !sortAscending;
+                } else {
+                    currentSortColumn = sortColumn;
+                    sortAscending = true;
+                }
+
+                // 更新排序图标
+                document.querySelectorAll('th[data-sort] i').forEach(icon => {
+                    icon.className = 'fa fa-sort ml-1';
+                });
+
+                th.querySelector('i').className = `fa fa-sort-${sortAscending ? 'asc' : 'desc'} ml-1`;
+
+                // 排序结果
+                sortResults(sortColumn, sortAscending);
+            });
+        });
+
+        function sortResults(column, ascending) {
+            const rows = Array.from(resultsBody.rows);
+
+            rows.sort((a, b) => {
+                let valueA, valueB;
+
+                switch (column) {
+                    case 'perfect':
+                    case 'good':
+                    case 'badMiss':
+                    case 'maxCombo':
+                    case 'totalScore':
+                        valueA = parseInt(a.cells[getColumnIndex(column)].textContent);
+                        valueB = parseInt(b.cells[getColumnIndex(column)].textContent);
+                        break;
+                    case 'accuracy':
+                        valueA = parseFloat(a.cells[getColumnIndex(column)].textContent);
+                        valueB = parseFloat(b.cells[getColumnIndex(column)].textContent);
+                        break;
+                }
+
+                return ascending ? valueA - valueB : valueB - valueA;
+            });
+
+            // 清空表格并添加排序后的行
+            resultsBody.innerHTML = '';
+            rows.forEach(row => {
+                resultsBody.appendChild(row);
+
+                // 重新应用奇偶行样式
+                const index = resultsBody.rows.length - 1;
+                row.className = index % 2 === 0 ? 'table-row-odd' : 'table-row-even';
+            });
+        }
+
+        function getColumnIndex(columnName) {
+            const columns = {
+                'perfect': 0,
+                'good': 1,
+                'badMiss': 2,
+                'maxCombo': 3,
+                'accuracy': 4,
+                'totalScore': 5
+            };
+            return columns[columnName];
+        }
+
+        // 创建Web Worker
+        function createWorker() {
+            const workerScript = `
+                // 计算函数
+                function calculatePossibleJudgments(totalNotes, targetScore, isProjectMode, isFastMode) {
+                    const possibleCombinations = [];
+                    const judgeBase = isProjectMode ? 1000000 : 900000;
+                    const comboBase = isProjectMode ? 0 : 100000;
+                    // 处理目标分数为0的特殊情况
+                    if (targetScore === 0) {
+                        return {
+                            combinations: [{
+                                perfect: 0,
+                                good: 0,
+                                badMiss: totalNotes,
+                                maxCombo: 0,
+                                accuracy: "0.00%",
+                                totalScore: 0
+                            }],
+                        maxPossible: isProjectMode ? 1000000 : 1000000,
+                        progress: 100
+                        };
+                    }
+                    // 计算最大可能分数
+                    const maxJudgeScore = Math.round(judgeBase);
+                    const maxScorePossible = isProjectMode ? maxJudgeScore : maxJudgeScore + comboBase;
+                    
+                    if (targetScore > maxScorePossible) {
+                        return { combinations: [], maxPossible: maxScorePossible, progress: 100 };
+                    }
+
+                    // 1. perfect范围计算 - 修复低分情况的范围问题
+                    const perfectRange = calculatePerfectRange(totalNotes, targetScore, isProjectMode, isFastMode);
+                    
+                    // 2. 进度计算
+                    let totalIterations = perfectRange.max - perfectRange.min + 1;
+                    let processed = 0;
+                    let lastProgress = 0;
+                    
+                    // 3. 主循环
+                    for (let perfect = perfectRange.min; perfect <= perfectRange.max; perfect++) {
+                        const maxGood = totalNotes - perfect;
+                        
+                        // 4. good范围计算
+                        const goodRange = calculateGoodRange(perfect, maxGood, totalNotes, targetScore, isProjectMode, isFastMode);
+                        
+                        // 扩展范围确保覆盖所有可能结果
+                        const extendedMin = Math.max(0, goodRange.min - 2);
+                        const extendedMax = Math.min(maxGood, goodRange.max + 2);
+                        
+                        for (let good = extendedMin; good <= extendedMax; good++) {
+                            const badMiss = totalNotes - perfect - good;
+                            
+                            // 过滤不合理情况：没有Bad/Miss但最大连击不足
+                            if (badMiss === 0 && (perfect + good) < totalNotes) {
+                                continue;
+                            }
+                            
+                            if (isProjectMode) {
+                                // 课题模式计算
+                                const judgeScore = (perfect + good * 0.65) / totalNotes * judgeBase;
+                                const totalScore = Math.round(judgeScore);
+                                
+                                if (totalScore === targetScore) {
+                                    const maxCombo = perfect + good;
+                                    const accuracy = ((perfect * 100 + good * 65) / totalNotes).toFixed(2);
+                                    
+                                    // 再次检查合理性
+                                    if (!(badMiss === 0 && maxCombo < totalNotes)) {
+                                        possibleCombinations.push({
+                                            perfect,
+                                            good,
+                                            badMiss,
+                                            maxCombo,
+                                            accuracy: \`\${accuracy}%\`,
+                                            totalScore
+                                        });
+                                    }
+                                }
+                            } else {
+                                // 普通模式 - 移除combo循环
+                                const judgeScore = (perfect + good * 0.65) / totalNotes * judgeBase;
+                                const maxPossibleCombo = perfect + good;
+                                
+                                // 5. 直接计算所需连击数
+                                const requiredComboScore = targetScore - judgeScore;
+                                const requiredCombo = Math.round(requiredComboScore * totalNotes / comboBase);
+                                
+                                // 检查连击数是否有效
+                                if (requiredCombo >= 0 && requiredCombo <= maxPossibleCombo) {
+                                    const actualComboScore = (requiredCombo / totalNotes) * comboBase;
+                                    const totalScore = Math.round(judgeScore + actualComboScore);
+                                    
+                                    // 浮点数精度处理 - 使用容差比较
+                                    if (Math.abs(totalScore - targetScore) < 0.5) {
+                                        const accuracy = ((perfect * 100 + good * 65) / totalNotes).toFixed(2);
+                                        
+                                        // 检查合理性：没有Bad/Miss但连击不足
+                                        if (!(badMiss === 0 && requiredCombo < totalNotes)) {
+                                            possibleCombinations.push({
+                                                perfect,
+                                                good,
+                                                badMiss,
+                                                maxCombo: requiredCombo,
+                                                accuracy: \`\${accuracy}%\`,
+                                                totalScore: targetScore
+                                            });
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // 6. 进度更新
+                        processed++;
+                        const progress = Math.floor((processed / totalIterations) * 100);
+                        if (progress > lastProgress) {
+                            lastProgress = progress;
+                            self.postMessage({ type: 'progress', progress });
+                        }
+                    }
+                    
+                    // 7. 结果过滤和排序
+                    return {
+                        combinations: filterAndSortResults(possibleCombinations),
+                        maxPossible: maxScorePossible,
+                        progress: 100
+                    };
+                }
+                
+                // 辅助函数
+                function calculatePerfectRange(totalNotes, targetScore, isProjectMode, isFastMode) {
+                    if (isProjectMode) {
+                        // 课题模式计算
+                        const min = Math.max(0, Math.floor((targetScore * totalNotes / 1000000 - totalNotes * 0.65) / 0.35) - 25);
+                        const max = Math.min(totalNotes, Math.ceil(targetScore * totalNotes / 1000000) + 25);
+                        return { min, max };
+                    }
+                    
+                    // 普通模式计算 - 修复低分情况的范围问题
+                    if (isFastMode) {
+                        // 快速模式：使用更宽的范围
+                        const min = Math.max(0, Math.floor(targetScore * totalNotes / 1000000) - 50);
+                        const max = Math.min(totalNotes, Math.ceil(targetScore * totalNotes / 900000) + 50);
+                        return { min, max };
+                    } else {
+                        // 非快速模式：使用完整范围
+                        return { min: 0, max: totalNotes };
+                    }
+                }
+                
+                function calculateGoodRange(perfect, maxGood, totalNotes, targetScore, isProjectMode, isFastMode) {
+                    if (isProjectMode) {
+                        const minGood = Math.max(0, Math.floor(
+                            (targetScore * totalNotes / 1000000 - perfect) / 0.65
+                        ));
+                        
+                        if (isFastMode) {
+                            // 快速模式：扩大搜索范围
+                            return {
+                                min: Math.max(0, minGood - 10),
+                                max: Math.min(maxGood, minGood + 10)
+                            };
+                        }
+                        return { min: minGood, max: Math.min(maxGood, minGood + 20) };
+                    }
+                    
+                    // 普通模式
+                    if (isFastMode) {
+                        // 快速模式使用更大范围
+                        return { min: 0, max: Math.min(150, maxGood) };
+                    } else {
+                        // 非快速模式使用完整范围
+                        return { min: 0, max: maxGood };
+                    }
+                }
+                
+                function filterAndSortResults(combinations, totalNotes) {  // 添加totalNotes参数
+            // 结果去重和排序
+            const unique = new Set();
+            return combinations
+                .filter(combo => combo.maxCombo > 0)
+                .filter(combo => {
+                    // 过滤不合理的断连情况 - 使用传入的totalNotes
+                    if (combo.badMiss === 0 && combo.maxCombo < totalNotes) {
+                        return false;
+                    }
+                    
+                    const key = \`\${combo.perfect}-\${combo.good}-\${combo.maxCombo}\`;
+                    if (!unique.has(key)) {
+                        unique.add(key);
+                        return true;
+                    }
+                    return false;
+                })
+                .sort((a, b) => {
+                    // 按准确率降序排序
+                    const accA = parseFloat(a.accuracy);
+                    const accB = parseFloat(b.accuracy);
+                    return accB - accA;
+                });
+        }
+        
+        self.onmessage = function(e) {
+            const { totalNotes, targetScore, isProjectMode, isFastMode } = e.data;
+            const result = calculatePossibleJudgments(totalNotes, targetScore, isProjectMode, isFastMode);
+            let filtered = result.combinations;
+            
+            // 只有当目标分数不为0时才需要过滤（0分情况已单独处理）
+            if (targetScore !== 0) {
+                filtered = filterAndSortResults(filtered, totalNotes);
+            }
+            
+            self.postMessage({ 
+                type: 'result', 
+                combinations: filtered,
+                maxPossible: result.maxPossible,
+                progress: 100 
+            });
+        };
+    `;
+
+            const blob = new Blob([workerScript], { type: 'application/javascript' });
+            const workerUrl = URL.createObjectURL(blob);
+            return new Worker(workerUrl);
+        }
+
+        // 计算按钮点击事件
+        calculateBtn.addEventListener('click', () => {
+            // 如果已有正在运行的worker，终止它
+            if (worker) {
+                worker.terminate();
+                worker = null;
+            }
+
+            // 清除之前的超时
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+                timeoutId = null;
+            }
+
+            // 获取输入值
+            const totalNotesStr = totalNotesInput.value;
+            const targetScoreStr = targetScoreInput.value;
+            const isFastMode = fastModeCheckbox.checked;
+            const isProjectMode = projectModeCheckbox.checked;
+
+            // 验证输入是否为整数
+            const isInteger = (value) => {
+                return /^\d+$/.test(value);
+            };
+
+            // 验证谱面物量
+            if (!isInteger(totalNotesStr)) {
+                alert('谱面物量必须是整数（不能包含小数）');
+                return;
+            }
+
+            // 验证目标分数
+            if (!isInteger(targetScoreStr)) {
+                alert('目标分数必须是整数（不能包含小数）');
+                return;
+            }
+
+            // 转换为整数
+            const totalNotes = parseInt(totalNotesStr);
+            const targetScore = parseInt(targetScoreStr);
+
+            // 验证输入范围
+            if (isNaN(totalNotes) || totalNotes <= 0 || totalNotes > 25000) {
+                alert('请输入有效的谱面物量（范围1-25000）');
+                return;
+            }
+
+            if (isNaN(targetScore) || targetScore < 0 || targetScore > 1000000) {
+                alert('请输入有效的目标分数（范围0-1000000）');
+                return;
+            }
+
+            // 添加对目标分数为0的特殊提示
+            if (targetScore === 0) {
+                warningInfo.classList.remove('hidden');
+                warningText.textContent = '目标分数为0表示全部Miss的情况，将直接返回该结果';
+            } else {
+                warningInfo.classList.add('hidden');
+            }
+
+            // 显示警告信息
+            if (totalNotes > 1000) {
+                warningInfo.classList.remove('hidden');
+                let warningMsg = `物量较大（${totalNotes}），计算可能需要较长时间，请耐心等待...`;
+                if (isFastMode) {
+                    warningMsg += ' 快速模式可能遗漏部分结果，如需完整结果请关闭快速模式。';
+                }
+                warningText.textContent = warningMsg;
+            }
+
+            // 清空表格
+            resultsBody.innerHTML = '';
+
+            // 显示加载状态
+            statsInfo.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i>计算中，请稍候...';
+            calculateBtn.disabled = true;
+            calculateBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i>计算中...';
+            progressContainer.classList.remove('hidden');
+            progressBar.style.width = '0%';
+
+            // 创建并启动Web Worker
+            worker = createWorker();
+
+            // 设置超时时间（根据模式调整）
+            let timeoutDuration = 20000; // 默认20秒
+            if (!isFastMode && totalNotes > 500) {
+                timeoutDuration = 60000; // 非快速模式且物量较大时使用60秒超时
+            }
+
+            timeoutId = setTimeout(() => {
+                if (worker) {
+                    worker.terminate();
+                    worker = null;
+                    statsInfo.innerHTML = '<span class="text-red-400">计算超时，请尝试更小的物量或使用快速模式</span>';
+                    calculateBtn.disabled = false;
+                    calculateBtn.innerHTML = '<i class="fa fa-calculator mr-2"></i>计算';
+                    progressContainer.classList.add('hidden');
+                }
+            }, timeoutDuration);
+
+            worker.onmessage = function (e) {
+                if (e.data.type === 'progress') {
+                    // 更新进度条
+                    progressBar.style.width = `${e.data.progress}%`;
+                } else if (e.data.type === 'result') {
+                    // 清除超时
+                    if (timeoutId) {
+                        clearTimeout(timeoutId);
+                        timeoutId = null;
+                    }
+
+                    // 隐藏进度条
+                    progressContainer.classList.add('hidden');
+
+                    const validCombinations = e.data.combinations;
+
+                    // 填充表格
+                    if (validCombinations.length > 0) {
+                        validCombinations.forEach((combo, index) => {
+                            const row = resultsBody.insertRow();
+                            row.className = index % 2 === 0 ? 'table-row-odd' : 'table-row-even';
+
+                            row.insertCell().textContent = combo.perfect;
+                            row.insertCell().textContent = combo.good;
+                            row.insertCell().textContent = combo.badMiss;
+                            row.insertCell().textContent = combo.maxCombo;
+                            row.insertCell().textContent = combo.accuracy;
+                            row.insertCell().textContent = combo.totalScore;
+                        });
+
+                        // 更新统计信息
+                        const modeText = projectModeCheckbox.checked ? "课题模式" : "普通模式";
+                        statsInfo.innerHTML = `${modeText}: 找到 ${validCombinations.length} 种可能的判定组合，最高分数: ${e.data.maxPossible}`;
+                    } else {
+                        statsInfo.innerHTML = `${projectModeCheckbox.checked ? "课题模式" : "普通模式"}: 没有符合条件的判定组合，该谱面的最高可能分数为 ${e.data.maxPossible} 分。`;
+                    }
+
+                    // 恢复按钮状态
+                    calculateBtn.disabled = false;
+                    calculateBtn.innerHTML = '<i class="fa fa-calculator mr-2"></i>计算';
+                    if (isFastMode) {
+                        warningText.textContent = '快速模式可能遗漏部分结果，如需完整结果请关闭快速模式。';
+                        warningInfo.classList.remove('hidden');
+                    }
+                    else {
+                        warningInfo.classList.add('hidden');
+                    }
+
+
+                    // 释放worker资源
+                    worker.terminate();
+                    worker = null;
+                }
+            };
+
+            worker.onerror = function (error) {
+                console.error('Worker error:', error);
+                statsInfo.innerHTML = `<span class="text-red-400"><i class="fa fa-exclamation-circle mr-2"></i>计算错误: ${error.message}</span>`;
+                progressContainer.classList.add('hidden');
+                calculateBtn.disabled = false;
+                calculateBtn.innerHTML = '<i class="fa fa-calculator mr-2"></i>计算';
+                if (worker) {
+                    worker.terminate();
+                    worker = null;
+                }
+            };
+
+            // 向worker发送数据
+            worker.postMessage({
+                totalNotes,
+                targetScore,
+                isProjectMode,
+                isFastMode
+            });
+        });
+
+        // 页面卸载时终止worker
+        window.addEventListener('unload', () => {
+            if (worker) {
+                worker.terminate();
+            }
+        });
+
+        // 初始化
+        updateRuleDescription();
+
+        // 新增点击版本号显示更新日志窗口功能
+        version.addEventListener('click', () => {
+            changelogModal.classList.remove('hidden');
+        });
+
+        // 新增关闭更新日志窗口功能
+        closeChangelog.addEventListener('click', () => {
+            changelogModal.classList.add('hidden');
+        });
+    </script>
+</body>
+
+</html>
