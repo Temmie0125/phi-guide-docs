@@ -1,4 +1,5 @@
 import { defineConfig, type DefaultTheme } from 'vitepress'
+import cjkFriendly from 'markdown-it-cjk-friendly'
 
 // 站点信息：
 // - sitemap 暂未启用：域名尚未备案，待阿里云 ESA 绑定自定义域名后，
@@ -46,6 +47,8 @@ export default defineConfig({
   lastUpdated: true,
   markdown: {
     math: true,
+    // 修复 ~~删除线~~/**加粗** 闭合端紧邻全角标点+汉字时无法配对的 CJK 问题
+    config: (md) => md.use(cjkFriendly),
   },
 
   themeConfig: {
