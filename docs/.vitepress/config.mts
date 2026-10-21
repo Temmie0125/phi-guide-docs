@@ -84,7 +84,8 @@ export default defineConfig({
     socialLinks: [{ icon: 'github', link: 'https://github.com/Temmie0125/phi-guide-docs' }],
 
     footer: {
-      message: '本文禁止转载或摘编',
+      message:
+        '本文禁止转载或摘编 · <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">浙ICP备2026088502号</a>',
       copyright: 'Copyright © 2026 Temmie0125',
     },
 
