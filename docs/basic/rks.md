@@ -23,7 +23,7 @@ $rks = \left( \frac{100 \times Acc - 55}{45} \right)^{2} \times level$
 
 ## 理论rks分表
 
-截至`4.0.1`版本，rks的理论最高值为`17.32`（`17.3167`），需要以φ评级完成定数最高的27张谱面。  
+截至`4.1.0`版本，rks的理论最高值为`17.34`（`17.3367`），需要以φ评级完成定数最高的27张谱面。  
 当前版本定数最高的谱面列表：（如无特殊说明默认为`AT难度`）  
 
 | 定数（谱面数） | 谱面 |
@@ -33,12 +33,12 @@ $rks = \left( \frac{100 \times Acc - 55}{45} \right)^{2} \times level$
 | 17.6（2） | Rrhar'il、Entrance to the Chaos |
 | 17.5（2） | Der Schneid、Petrichor |
 | 17.4（3） | Distorted Fate、Igallta、QZKago Requiem |
-| 17.3（3） | +ERABY+E CONNEC+10N、DESTRUCTION 3,2,1、祈 -我ら神祖と共に歩む者なり- |
+| 17.3（4） | +ERABY+E CONNEC+10N、DESTRUCTION 3,2,1、祈 -我ら神祖と共に歩む者なり-、STATGAZERS |
 | 17.2（2） | AbsoluTe disoRdeR、Stardust:RAY |
 | 17.1（2） | Hydra、What do you want more than a Happy ending? |
 | 17.0（3） | 幻影鬼魅 (PLEASE)、玩具狂奏曲 -終焉- 、Desultory Signals [IN] |
-| 16.9（4） | Re：End of a Dream、Der Richter、Archidoxen、INFiNiTE ENERZY -Overdoze-、 |
-| 16.8（4） | sølips、BANGING STRIKE、Entrance to the Chaos [IN]、Exoplanetary Mirage [IN] |
+| 16.9（4） | Re：End of a Dream、Der Richter、Archidoxen、INFiNiTE ENERZY -Overdoze-、Exoplanetary Mirage [IN] |
+| 16.8（4） | sølips、BANGING STRIKE、Entrance to the Chaos [IN] |
 | 16.7（OverFlow） | Diamond Dust、Spasmodic、Stasis、Cuvism³、ハテ[IN]<br>*自4.0.1更新后，理论rks的b27最低位已经提升至16.80，因此不再需要AP16.7定数的歌曲 |
 
 ## RKS(b30)查询
